@@ -38,6 +38,34 @@ int clockPin = 17;
 //Пин подключен к DS входу 74HC595
 int dataPin = 15;
 
+/*const byte matrix [] =
+{
+  //0x1AD1, 0x6B24, 0x6B06, 0x6B05
+  //0x116B, 0x126B, 0x306B, 0x2833
+  0b11000000, 0b11110000, 0b11111111, 0b10001111
+};
+*/
+const byte first[] = {0b11010110, 0b11010110, 0b11010110, 0b11010110};
+const byte second[] = {0b01110111, 0b10110111, 0b11110011, 0b11110101};
+
+// Пины подключенные к сдвиговому регистру
+int digit1 = 9; //8
+int digit2 = 10; //9
+int digit3 = 14; //13
+int digit4 = 15; //14
+
+int segA = 1; //Display pin 11
+int segB = 2; //Display pin 7
+int segC = 4; //Display pin 4
+int segD = 5; //Display pin 2
+int segE = 6; //Display pin 1
+int segF = 13; //Display pin 10
+int segG = 7; //Display pin 5
+
+int point = 3; // Point pin 3
+
+int count = 0;
+
 /*
 void setup() {
   //устанавливаем режим OUTPUT
@@ -62,7 +90,7 @@ void loop() {
   }
 }
 */
-char inputString[2];
+//char inputString[2];
 
 void setup() {
    //устанавливаем режим OUTPUT
@@ -73,26 +101,26 @@ void setup() {
   Serial.println("reset");
 }
 
+
 void loop() {
-  // проходим циклом по всем 16 выходам двух регистров
-  for (int thisLed = 0; thisLed < 16; thisLed++) {
-    // записываем сигнал в регистр для очередного светодиода
-    registerWrite(thisLed, HIGH);
-    // если это не первый светодиод, то отключаем предыдущий
-    if (thisLed > 0) {
-      registerWrite(thisLed - 1, LOW);
-    }
-    // если это первый светодиод, то отключаем последний
-    else {
-      registerWrite(15, LOW);
-    }
-    // делаем паузу перед следующией итерацией
-    delay(250);
+ // отсчитываем от 0 до 255  и отображаем значение на светодиоде
+  for (int i = 0; i < 4; i++) {
+    // устанавливаем синхронизацию "защелки" на LOW
+    digitalWrite(latchPin, LOW);
+    // передаем отсчет для вывода на зеленые светодиоды
+    //byte registerOne = highByte(matrix[i]);
+    //byte registerTwo = lowByte(matrix[i]);
+
+    // "проталкиваем" байты в регистры
+    shiftOut(dataPin, clockPin, MSBFIRST, first[i]);
+    shiftOut(dataPin, clockPin, MSBFIRST, second[i]);
+    // передаем обратный отсчет  для вывода на красные светодиоды
+    //"защелкиваем" регистр, тем самым устанавливая значения на выходах
+    digitalWrite(latchPin, HIGH);
+    // пауза перед следующей итерацией
+    delay(1000);
   }
-
 }
-
-// этот метод отсылает бит на сдвиговый регистр
 
 void registerWrite(int whichPin, int whichState) {
   // для хранения 16 битов используем unsigned int
@@ -110,90 +138,52 @@ void registerWrite(int whichPin, int whichState) {
   byte registerTwo = lowByte(bitsToSend);
 
   // "проталкиваем" байты в регистры
-  shiftOut(dataPin, clockPin, MSBFIRST, registerTwo);
-  shiftOut(dataPin, clockPin, MSBFIRST, registerOne);
+  shiftOut(dataPin, clockPin, MSBFIRST, 0x01);
+  //shiftOut(dataPin, clockPin, MSBFIRST, registerOne);
 
   // "защелкиваем" регистр, чтобы биты появились на выходах регистра
   digitalWrite(latchPin, HIGH);
 }
 
-// Пины подключенные к сдвиговому регистру
-int digit1 = 12; //PWM Display pin 12
-int digit2 = 11; //PWM Display pin 9
-int digit3 = 10; //PWM Display pin 8
-int digit4 = 9; //PWM Display pin 6
-
-int segA = 2; //Display pin 11
-int segB = 4; //Display pin 7
-int segC = 6; //Display pin 4
-int segD = 7; //Display pin 2
-int segE = 8; //Display pin 1
-int segF = 3; //Display pin 10
-int segG = 5; //Display pin 5
-
-int point = 22; // Point pin 3
-
-int count = 0;
-
-void setup() {
-  pinMode(segA, OUTPUT);
-  pinMode(segB, OUTPUT);
-  pinMode(segC, OUTPUT);
-  pinMode(segD, OUTPUT);
-  pinMode(segE, OUTPUT);
-  pinMode(segF, OUTPUT);
-  pinMode(segG, OUTPUT);
-
-  pinMode(digit1, OUTPUT);
-  pinMode(digit2, OUTPUT);
-  pinMode(digit3, OUTPUT);
-  pinMode(digit4, OUTPUT);
-
-  pinMode(13, OUTPUT);
-}
-
-void loop() {
-  long startTime = millis();
-  while( (millis() - startTime) < 100) {
-    displayNumber(count);
-  }
-  count ++;
-  if (count == 10000)
-    count = 0;
-}
-
 void displayNumber(int toDisplay) {
 #define DIGIT_ON  HIGH
 #define DIGIT_OFF  LOW
+#define SEGMENT_ON  LOW
+#define SEGMENT_OFF HIGH
 
-  long beginTime = millis();
+  //for(int digit = 4 ; digit > 0 ; digit--) {
 
-  for(int digit = 4 ; digit > 0 ; digit--) {
+    //switch(digit) {
+     // case 1:
+        registerWrite(digit1, DIGIT_ON);
+     //   break;
+      //case 2:
+     //   registerWrite(digit2, DIGIT_ON);
+     //   break;
+     // case 3:
+     //   registerWrite(digit3, DIGIT_ON);
+     //   break;
+     // case 4:
+     //   registerWrite(digit4, DIGIT_ON);
+    //    break;
+    //}
 
-    switch(digit) {
-      case 1:
-        digitalWrite(digit1, DIGIT_ON);
-        break;
-      case 2:
-        digitalWrite(digit2, DIGIT_ON);
-        break;
-      case 3:
-        digitalWrite(digit3, DIGIT_ON);
-        break;
-      case 4:
-        digitalWrite(digit4, DIGIT_ON);
-        break;
-    }
+    //lightNumber(toDisplay % 10);
+    //toDisplay /= 10;
+    registerWrite(segA, SEGMENT_ON);
+    registerWrite(segB, SEGMENT_OFF);
+    registerWrite(segC, SEGMENT_OFF);
+    registerWrite(segD, SEGMENT_OFF);
+    registerWrite(segE, SEGMENT_OFF);
+    registerWrite(segF, SEGMENT_OFF);
+    registerWrite(segG, SEGMENT_OFF);
+    //lightNumber(1);
+    registerWrite(digit1, DIGIT_OFF);
+    registerWrite(digit2, DIGIT_OFF);
+    registerWrite(digit3, DIGIT_OFF);
+    registerWrite(digit4, DIGIT_OFF);
 
-    lightNumber(toDisplay % 10);
-    toDisplay /= 10;
-    lightNumber(10);
-    digitalWrite(digit1, DIGIT_OFF);
-    digitalWrite(digit2, DIGIT_OFF);
-    digitalWrite(digit3, DIGIT_OFF);
-    digitalWrite(digit4, DIGIT_OFF);
-
-  }
+  //}
 }
 void lightNumber(int numberToDisplay) {
 
@@ -203,113 +193,113 @@ void lightNumber(int numberToDisplay) {
   switch (numberToDisplay){
 
   case 0:
-    digitalWrite(segA, SEGMENT_ON);
-    digitalWrite(segB, SEGMENT_ON);
-    digitalWrite(segC, SEGMENT_ON);
-    digitalWrite(segD, SEGMENT_ON);
-    digitalWrite(segE, SEGMENT_ON);
-    digitalWrite(segF, SEGMENT_ON);
-    digitalWrite(segG, SEGMENT_OFF);
+    registerWrite(segA, SEGMENT_ON);
+    registerWrite(segB, SEGMENT_ON);
+    registerWrite(segC, SEGMENT_ON);
+    registerWrite(segD, SEGMENT_ON);
+    registerWrite(segE, SEGMENT_ON);
+    registerWrite(segF, SEGMENT_ON);
+    registerWrite(segG, SEGMENT_OFF);
     break;
 
   case 1:
-    digitalWrite(segA, SEGMENT_OFF);
-    digitalWrite(segB, SEGMENT_ON);
-    digitalWrite(segC, SEGMENT_ON);
-    digitalWrite(segD, SEGMENT_OFF);
-    digitalWrite(segE, SEGMENT_OFF);
-    digitalWrite(segF, SEGMENT_OFF);
-    digitalWrite(segG, SEGMENT_OFF);
+    registerWrite(segA, SEGMENT_OFF);
+    registerWrite(segB, SEGMENT_ON);
+    registerWrite(segC, SEGMENT_ON);
+    registerWrite(segD, SEGMENT_OFF);
+    registerWrite(segE, SEGMENT_OFF);
+    registerWrite(segF, SEGMENT_OFF);
+    registerWrite(segG, SEGMENT_OFF);
     break;
 
   case 2:
-    digitalWrite(segA, SEGMENT_ON);
-    digitalWrite(segB, SEGMENT_ON);
-    digitalWrite(segC, SEGMENT_OFF);
-    digitalWrite(segD, SEGMENT_ON);
-    digitalWrite(segE, SEGMENT_ON);
-    digitalWrite(segF, SEGMENT_OFF);
-    digitalWrite(segG, SEGMENT_ON);
+    registerWrite(segA, SEGMENT_ON);
+    registerWrite(segB, SEGMENT_ON);
+    registerWrite(segC, SEGMENT_OFF);
+    registerWrite(segD, SEGMENT_ON);
+    registerWrite(segE, SEGMENT_ON);
+    registerWrite(segF, SEGMENT_OFF);
+    registerWrite(segG, SEGMENT_ON);
     break;
 
   case 3:
-    digitalWrite(segA, SEGMENT_ON);
-    digitalWrite(segB, SEGMENT_ON);
-    digitalWrite(segC, SEGMENT_ON);
-    digitalWrite(segD, SEGMENT_ON);
-    digitalWrite(segE, SEGMENT_OFF);
-    digitalWrite(segF, SEGMENT_OFF);
-    digitalWrite(segG, SEGMENT_ON);
+    registerWrite(segA, SEGMENT_ON);
+    registerWrite(segB, SEGMENT_ON);
+    registerWrite(segC, SEGMENT_ON);
+    registerWrite(segD, SEGMENT_ON);
+    registerWrite(segE, SEGMENT_OFF);
+    registerWrite(segF, SEGMENT_OFF);
+    registerWrite(segG, SEGMENT_ON);
     break;
 
   case 4:
-    digitalWrite(segA, SEGMENT_OFF);
-    digitalWrite(segB, SEGMENT_ON);
-    digitalWrite(segC, SEGMENT_ON);
-    digitalWrite(segD, SEGMENT_OFF);
-    digitalWrite(segE, SEGMENT_OFF);
-    digitalWrite(segF, SEGMENT_ON);
-    digitalWrite(segG, SEGMENT_ON);
+    registerWrite(segA, SEGMENT_OFF);
+    registerWrite(segB, SEGMENT_ON);
+    registerWrite(segC, SEGMENT_ON);
+    registerWrite(segD, SEGMENT_OFF);
+    registerWrite(segE, SEGMENT_OFF);
+    registerWrite(segF, SEGMENT_ON);
+    registerWrite(segG, SEGMENT_ON);
     break;
 
   case 5:
-    digitalWrite(segA, SEGMENT_ON);
-    digitalWrite(segB, SEGMENT_OFF);
-    digitalWrite(segC, SEGMENT_ON);
-    digitalWrite(segD, SEGMENT_ON);
-    digitalWrite(segE, SEGMENT_OFF);
-    digitalWrite(segF, SEGMENT_ON);
-    digitalWrite(segG, SEGMENT_ON);
+    registerWrite(segA, SEGMENT_ON);
+    registerWrite(segB, SEGMENT_OFF);
+    registerWrite(segC, SEGMENT_ON);
+    registerWrite(segD, SEGMENT_ON);
+    registerWrite(segE, SEGMENT_OFF);
+    registerWrite(segF, SEGMENT_ON);
+    registerWrite(segG, SEGMENT_ON);
     break;
 
   case 6:
-    digitalWrite(segA, SEGMENT_ON);
-    digitalWrite(segB, SEGMENT_OFF);
-    digitalWrite(segC, SEGMENT_ON);
-    digitalWrite(segD, SEGMENT_ON);
-    digitalWrite(segE, SEGMENT_ON);
-    digitalWrite(segF, SEGMENT_ON);
-    digitalWrite(segG, SEGMENT_ON);
+    registerWrite(segA, SEGMENT_ON);
+    registerWrite(segB, SEGMENT_OFF);
+    registerWrite(segC, SEGMENT_ON);
+    registerWrite(segD, SEGMENT_ON);
+    registerWrite(segE, SEGMENT_ON);
+    registerWrite(segF, SEGMENT_ON);
+    registerWrite(segG, SEGMENT_ON);
     break;
 
   case 7:
-    digitalWrite(segA, SEGMENT_ON);
-    digitalWrite(segB, SEGMENT_ON);
-    digitalWrite(segC, SEGMENT_ON);
-    digitalWrite(segD, SEGMENT_OFF);
-    digitalWrite(segE, SEGMENT_OFF);
-    digitalWrite(segF, SEGMENT_OFF);
-    digitalWrite(segG, SEGMENT_OFF);
+    registerWrite(segA, SEGMENT_ON);
+    registerWrite(segB, SEGMENT_ON);
+    registerWrite(segC, SEGMENT_ON);
+    registerWrite(segD, SEGMENT_OFF);
+    registerWrite(segE, SEGMENT_OFF);
+    registerWrite(segF, SEGMENT_OFF);
+    registerWrite(segG, SEGMENT_OFF);
     break;
 
   case 8:
-    digitalWrite(segA, SEGMENT_ON);
-    digitalWrite(segB, SEGMENT_ON);
-    digitalWrite(segC, SEGMENT_ON);
-    digitalWrite(segD, SEGMENT_ON);
-    digitalWrite(segE, SEGMENT_ON);
-    digitalWrite(segF, SEGMENT_ON);
-    digitalWrite(segG, SEGMENT_ON);
+    registerWrite(segA, SEGMENT_ON);
+    registerWrite(segB, SEGMENT_ON);
+    registerWrite(segC, SEGMENT_ON);
+    registerWrite(segD, SEGMENT_ON);
+    registerWrite(segE, SEGMENT_ON);
+    registerWrite(segF, SEGMENT_ON);
+    registerWrite(segG, SEGMENT_ON);
     break;
 
   case 9:
-    digitalWrite(segA, SEGMENT_ON);
-    digitalWrite(segB, SEGMENT_ON);
-    digitalWrite(segC, SEGMENT_ON);
-    digitalWrite(segD, SEGMENT_ON);
-    digitalWrite(segE, SEGMENT_OFF);
-    digitalWrite(segF, SEGMENT_ON);
-    digitalWrite(segG, SEGMENT_ON);
+    registerWrite(segA, SEGMENT_ON);
+    registerWrite(segB, SEGMENT_ON);
+    registerWrite(segC, SEGMENT_ON);
+    registerWrite(segD, SEGMENT_ON);
+    registerWrite(segE, SEGMENT_OFF);
+    registerWrite(segF, SEGMENT_ON);
+    registerWrite(segG, SEGMENT_ON);
     break;
 
   case 10:
-    digitalWrite(segA, SEGMENT_OFF);
-    digitalWrite(segB, SEGMENT_OFF);
-    digitalWrite(segC, SEGMENT_OFF);
-    digitalWrite(segD, SEGMENT_OFF);
-    digitalWrite(segE, SEGMENT_OFF);
-    digitalWrite(segF, SEGMENT_OFF);
-    digitalWrite(segG, SEGMENT_OFF);
+    registerWrite(segA, SEGMENT_OFF);
+    registerWrite(segB, SEGMENT_OFF);
+    registerWrite(segC, SEGMENT_OFF);
+    registerWrite(segD, SEGMENT_OFF);
+    registerWrite(segE, SEGMENT_OFF);
+    registerWrite(segF, SEGMENT_OFF);
+    registerWrite(segG, SEGMENT_OFF);
     break;
   }
 }
