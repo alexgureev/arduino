@@ -31,6 +31,19 @@
    PCINT7-0: D31-24   : bit 0
    */
 
+#include <OneWire.h>
+#include <DallasTemperature.h>
+
+// Data wire is plugged into pin 2 on the Arduino
+#define ONE_WIRE_BUS 1
+
+// Setup a oneWire instance to communicate with any OneWire devices
+// (not just Maxim/Dallas temperature ICs)
+OneWire oneWire(ONE_WIRE_BUS);
+
+// Pass our oneWire reference to Dallas Temperature.
+DallasTemperature sensors(&oneWire);
+
 //Пин подключен к ST_CP входу 74HC595
 int latchPin = 16;
 //Пин подключен к SH_CP входу 74HC595
@@ -66,22 +79,34 @@ void setup() {
   pinMode(clockPin, OUTPUT);
   Serial.begin(9600);
   Serial.println("reset");
+  sensors.begin();
 }
 
 
 void loop() {
- // отсчитываем от 0 до 255  и отображаем значение на светодиоде
-  while(1)
-  {
-    registerWrite(1, 0);
-    delay(30);
-    registerWrite(2, 1);
-    delay(30);
-    registerWrite(3, 2);
-    delay(30);
-    registerWrite(4, 3);
-    delay(30);
+  //int temp = sensors.getTempCByIndex(0)*100;
+  displayNumber(1234);
+}
 
+void displayNumber(int toDisplay) {
+
+  for(int digit = 3 ; digit >= 0 ; digit--) {
+
+    switch(digit) {
+      case 0:
+        registerWrite(toDisplay, digit);
+        break;
+      case 1:
+        registerWrite(toDisplay % 10, digit);
+        break;
+      case 2:
+        registerWrite(toDisplay % 100, digit);
+        break;
+      case 3:
+        registerWrite(toDisplay % 1000, digit);
+        break;
+    }
+    toDisplay /= 10;
   }
 }
 
