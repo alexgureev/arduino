@@ -38,15 +38,8 @@ int clockPin = 17;
 //Пин подключен к DS входу 74HC595
 int dataPin = 15;
 
-/*const byte matrix [] =
-{
-  //0x1AD1, 0x6B24, 0x6B06, 0x6B05
-  //0x116B, 0x126B, 0x306B, 0x2833
-  0b11000000, 0b11110000, 0b11111111, 0b10001111
-};
-*/
-const byte first[] = {0b11010110, 0b11010110, 0b11010110, 0b11010110};
-const byte second[] = {0b01110111, 0b10110111, 0b11110011, 0b11110101};
+const byte first[] = {0b11011110, 0b01010000, 0b01101110, 0b01111100, 0b11110000, 0b10111100, 0b10111110, 0b01011000, 0b11111110, 0b11111100};
+const byte second[] = {0b01000110, 0b10000110, 0b11000100, 0b11000010};
 
 // Пины подключенные к сдвиговому регистру
 int digit1 = 9; //8
@@ -59,38 +52,12 @@ int segB = 2; //Display pin 7
 int segC = 4; //Display pin 4
 int segD = 5; //Display pin 2
 int segE = 6; //Display pin 1
-int segF = 13; //Display pin 10
+int segF = 3; //Display pin 10
 int segG = 7; //Display pin 5
 
-int point = 3; // Point pin 3
+int point = 13; // Point pin 3
 
 int count = 0;
-
-/*
-void setup() {
-  //устанавливаем режим OUTPUT
-  pinMode(latchPin, OUTPUT);
-  pinMode(clockPin, OUTPUT);
-  pinMode(dataPin, OUTPUT);
-}
-
-void loop() {
-  // отсчитываем от 0 до 255  и отображаем значение на светодиоде
-  for (int numberToDisplay = 0; numberToDisplay < 256; numberToDisplay++) {
-    // устанавливаем синхронизацию "защелки" на LOW
-    digitalWrite(latchPin, LOW);
-    // передаем отсчет для вывода на зеленые светодиоды
-    shiftOut(dataPin, clockPin, MSBFIRST, numberToDisplay);
-    // передаем обратный отсчет  для вывода на красные светодиоды
-    shiftOut(dataPin, clockPin, MSBFIRST, 255-numberToDisplay);
-    //"защелкиваем" регистр, тем самым устанавливая значения на выходах
-    digitalWrite(latchPin, HIGH);
-    // пауза перед следующей итерацией
-    delay(500);
-  }
-}
-*/
-//char inputString[2];
 
 void setup() {
    //устанавливаем режим OUTPUT
@@ -104,202 +71,23 @@ void setup() {
 
 void loop() {
  // отсчитываем от 0 до 255  и отображаем значение на светодиоде
-  for (int i = 0; i < 4; i++) {
-    // устанавливаем синхронизацию "защелки" на LOW
+  while(1)
+  {
+    registerWrite(1, 0);
+    delay(30);
+    registerWrite(2, 1);
+    delay(30);
+    registerWrite(3, 2);
+    delay(30);
+    registerWrite(4, 3);
+    delay(30);
+
+  }
+}
+
+void registerWrite(int firstId, int secondId) {
     digitalWrite(latchPin, LOW);
-    // передаем отсчет для вывода на зеленые светодиоды
-    //byte registerOne = highByte(matrix[i]);
-    //byte registerTwo = lowByte(matrix[i]);
-
-    // "проталкиваем" байты в регистры
-    shiftOut(dataPin, clockPin, MSBFIRST, first[i]);
-    shiftOut(dataPin, clockPin, MSBFIRST, second[i]);
-    // передаем обратный отсчет  для вывода на красные светодиоды
-    //"защелкиваем" регистр, тем самым устанавливая значения на выходах
+    shiftOut(dataPin, clockPin, MSBFIRST, first[firstId]);
+    shiftOut(dataPin, clockPin, MSBFIRST, second[secondId]);
     digitalWrite(latchPin, HIGH);
-    // пауза перед следующей итерацией
-    delay(1000);
-  }
-}
-
-void registerWrite(int whichPin, int whichState) {
-  // для хранения 16 битов используем unsigned int
-  unsigned int bitsToSend = 0;
-
-  // выключаем светодиоды на время передачи битов
-  digitalWrite(latchPin, LOW);
-
-  // устанавливаем HIGH в соответствующий бит
-  bitWrite(bitsToSend, whichPin, whichState);
-
-  // разбиваем наши 16 бит на два байта
-  // для записи в первый и второй регистр
-  byte registerOne = highByte(bitsToSend);
-  byte registerTwo = lowByte(bitsToSend);
-
-  // "проталкиваем" байты в регистры
-  shiftOut(dataPin, clockPin, MSBFIRST, 0x01);
-  //shiftOut(dataPin, clockPin, MSBFIRST, registerOne);
-
-  // "защелкиваем" регистр, чтобы биты появились на выходах регистра
-  digitalWrite(latchPin, HIGH);
-}
-
-void displayNumber(int toDisplay) {
-#define DIGIT_ON  HIGH
-#define DIGIT_OFF  LOW
-#define SEGMENT_ON  LOW
-#define SEGMENT_OFF HIGH
-
-  //for(int digit = 4 ; digit > 0 ; digit--) {
-
-    //switch(digit) {
-     // case 1:
-        registerWrite(digit1, DIGIT_ON);
-     //   break;
-      //case 2:
-     //   registerWrite(digit2, DIGIT_ON);
-     //   break;
-     // case 3:
-     //   registerWrite(digit3, DIGIT_ON);
-     //   break;
-     // case 4:
-     //   registerWrite(digit4, DIGIT_ON);
-    //    break;
-    //}
-
-    //lightNumber(toDisplay % 10);
-    //toDisplay /= 10;
-    registerWrite(segA, SEGMENT_ON);
-    registerWrite(segB, SEGMENT_OFF);
-    registerWrite(segC, SEGMENT_OFF);
-    registerWrite(segD, SEGMENT_OFF);
-    registerWrite(segE, SEGMENT_OFF);
-    registerWrite(segF, SEGMENT_OFF);
-    registerWrite(segG, SEGMENT_OFF);
-    //lightNumber(1);
-    registerWrite(digit1, DIGIT_OFF);
-    registerWrite(digit2, DIGIT_OFF);
-    registerWrite(digit3, DIGIT_OFF);
-    registerWrite(digit4, DIGIT_OFF);
-
-  //}
-}
-void lightNumber(int numberToDisplay) {
-
-#define SEGMENT_ON  LOW
-#define SEGMENT_OFF HIGH
-
-  switch (numberToDisplay){
-
-  case 0:
-    registerWrite(segA, SEGMENT_ON);
-    registerWrite(segB, SEGMENT_ON);
-    registerWrite(segC, SEGMENT_ON);
-    registerWrite(segD, SEGMENT_ON);
-    registerWrite(segE, SEGMENT_ON);
-    registerWrite(segF, SEGMENT_ON);
-    registerWrite(segG, SEGMENT_OFF);
-    break;
-
-  case 1:
-    registerWrite(segA, SEGMENT_OFF);
-    registerWrite(segB, SEGMENT_ON);
-    registerWrite(segC, SEGMENT_ON);
-    registerWrite(segD, SEGMENT_OFF);
-    registerWrite(segE, SEGMENT_OFF);
-    registerWrite(segF, SEGMENT_OFF);
-    registerWrite(segG, SEGMENT_OFF);
-    break;
-
-  case 2:
-    registerWrite(segA, SEGMENT_ON);
-    registerWrite(segB, SEGMENT_ON);
-    registerWrite(segC, SEGMENT_OFF);
-    registerWrite(segD, SEGMENT_ON);
-    registerWrite(segE, SEGMENT_ON);
-    registerWrite(segF, SEGMENT_OFF);
-    registerWrite(segG, SEGMENT_ON);
-    break;
-
-  case 3:
-    registerWrite(segA, SEGMENT_ON);
-    registerWrite(segB, SEGMENT_ON);
-    registerWrite(segC, SEGMENT_ON);
-    registerWrite(segD, SEGMENT_ON);
-    registerWrite(segE, SEGMENT_OFF);
-    registerWrite(segF, SEGMENT_OFF);
-    registerWrite(segG, SEGMENT_ON);
-    break;
-
-  case 4:
-    registerWrite(segA, SEGMENT_OFF);
-    registerWrite(segB, SEGMENT_ON);
-    registerWrite(segC, SEGMENT_ON);
-    registerWrite(segD, SEGMENT_OFF);
-    registerWrite(segE, SEGMENT_OFF);
-    registerWrite(segF, SEGMENT_ON);
-    registerWrite(segG, SEGMENT_ON);
-    break;
-
-  case 5:
-    registerWrite(segA, SEGMENT_ON);
-    registerWrite(segB, SEGMENT_OFF);
-    registerWrite(segC, SEGMENT_ON);
-    registerWrite(segD, SEGMENT_ON);
-    registerWrite(segE, SEGMENT_OFF);
-    registerWrite(segF, SEGMENT_ON);
-    registerWrite(segG, SEGMENT_ON);
-    break;
-
-  case 6:
-    registerWrite(segA, SEGMENT_ON);
-    registerWrite(segB, SEGMENT_OFF);
-    registerWrite(segC, SEGMENT_ON);
-    registerWrite(segD, SEGMENT_ON);
-    registerWrite(segE, SEGMENT_ON);
-    registerWrite(segF, SEGMENT_ON);
-    registerWrite(segG, SEGMENT_ON);
-    break;
-
-  case 7:
-    registerWrite(segA, SEGMENT_ON);
-    registerWrite(segB, SEGMENT_ON);
-    registerWrite(segC, SEGMENT_ON);
-    registerWrite(segD, SEGMENT_OFF);
-    registerWrite(segE, SEGMENT_OFF);
-    registerWrite(segF, SEGMENT_OFF);
-    registerWrite(segG, SEGMENT_OFF);
-    break;
-
-  case 8:
-    registerWrite(segA, SEGMENT_ON);
-    registerWrite(segB, SEGMENT_ON);
-    registerWrite(segC, SEGMENT_ON);
-    registerWrite(segD, SEGMENT_ON);
-    registerWrite(segE, SEGMENT_ON);
-    registerWrite(segF, SEGMENT_ON);
-    registerWrite(segG, SEGMENT_ON);
-    break;
-
-  case 9:
-    registerWrite(segA, SEGMENT_ON);
-    registerWrite(segB, SEGMENT_ON);
-    registerWrite(segC, SEGMENT_ON);
-    registerWrite(segD, SEGMENT_ON);
-    registerWrite(segE, SEGMENT_OFF);
-    registerWrite(segF, SEGMENT_ON);
-    registerWrite(segG, SEGMENT_ON);
-    break;
-
-  case 10:
-    registerWrite(segA, SEGMENT_OFF);
-    registerWrite(segB, SEGMENT_OFF);
-    registerWrite(segC, SEGMENT_OFF);
-    registerWrite(segD, SEGMENT_OFF);
-    registerWrite(segE, SEGMENT_OFF);
-    registerWrite(segF, SEGMENT_OFF);
-    registerWrite(segG, SEGMENT_OFF);
-    break;
-  }
 }
