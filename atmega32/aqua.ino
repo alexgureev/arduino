@@ -35,7 +35,7 @@
 #include <DallasTemperature.h>
 
 // Data wire is plugged into pin 2 on the Arduino
-#define ONE_WIRE_BUS 1
+#define ONE_WIRE_BUS 0
 
 // Setup a oneWire instance to communicate with any OneWire devices
 // (not just Maxim/Dallas temperature ICs)
@@ -51,7 +51,7 @@ int clockPin = 17;
 //Пин подключен к DS входу 74HC595
 int dataPin = 15;
 
-const byte first[] = {0b11011110, 0b01010000, 0b01101110, 0b01111100, 0b11110000, 0b10111100, 0b10111110, 0b01011000, 0b11111110, 0b11111100};
+const byte first[] = {0b11011110, 0b01010000, 0b01101110, 0b01111100, 0b11110000, 0b10111100, 0b10111110, 0b01011000, 0b11111110, 0b11111100, 0b00000000, 0b00000000};
 const byte second[] = {0b01000110, 0b10000110, 0b11000100, 0b11000010};
 
 // Пины подключенные к сдвиговому регистру
@@ -71,6 +71,8 @@ int segG = 7; //Display pin 5
 int point = 13; // Point pin 3
 
 int count = 0;
+int temp = 0;
+String stringDisplay = "1234";
 
 void setup() {
    //устанавливаем режим OUTPUT
@@ -80,39 +82,62 @@ void setup() {
   Serial.begin(9600);
   Serial.println("reset");
   sensors.begin();
+
 }
 
 
 void loop() {
-  //int temp = sensors.getTempCByIndex(0)*100;
-  displayNumber(1234);
+  sensors.requestTemperatures();
+  temp = sensors.getTempCByIndex(0);
+  while(count<2000) {
+    if(temp>15&&temp<36){
+      displayNumber(temp);
+    }
+    count++;
+  }
+  count = 0;
 }
 
-void displayNumber(int toDisplay) {
-
+void displayNumber(char toDisplay) {
+ int dis;
   for(int digit = 3 ; digit >= 0 ; digit--) {
 
     switch(digit) {
       case 0:
-        registerWrite(toDisplay, digit);
+        stringDisplay.setCharAt(digit, toDisplay);
         break;
       case 1:
-        registerWrite(toDisplay % 10, digit);
+        dis = toDisplay%10;
+        stringDisplay.setCharAt(digit, toDisplay);
         break;
       case 2:
-        registerWrite(toDisplay % 100, digit);
+        dis = toDisplay%10;
+        stringDisplay.setCharAt(digit, toDisplay);
         break;
       case 3:
-        registerWrite(toDisplay % 1000, digit);
+        dis = toDisplay%10;
+        stringDisplay.setCharAt(digit, toDisplay);
         break;
     }
     toDisplay /= 10;
   }
+
+  displayString(stringDisplay);
 }
 
-void registerWrite(int firstId, int secondId) {
+void displayString(String str)
+{
+   for(int digit = 3 ; digit >= 0 ; digit--)
+   {
+       registerWrite(str.charAt(digit), digit);
+   }
+}
+
+void registerWrite(char firstId, int secondId) {
+  int fst = firstId - '0';
+
     digitalWrite(latchPin, LOW);
-    shiftOut(dataPin, clockPin, MSBFIRST, first[firstId]);
+    shiftOut(dataPin, clockPin, MSBFIRST, first[fst]);
     shiftOut(dataPin, clockPin, MSBFIRST, second[secondId]);
     digitalWrite(latchPin, HIGH);
 }
